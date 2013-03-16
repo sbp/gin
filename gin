@@ -103,8 +103,11 @@ def parse(filename):
             yield entry
 
         indexlen = len(f)
+        extnumber = 1
+
         while f.tell() < (indexlen - 20):
             extension = {}
+            extension["extension"] = extnumber
             extension["signature"] = f.read(4)
             extension["size"] = read("I")
 
@@ -113,6 +116,7 @@ def parse(filename):
             extension["data"] = f.read(extension["size"])
 
             yield extension
+            extnumber += 1
 
         checksum = {}
         checksum["sha1"] = f.read(20)
