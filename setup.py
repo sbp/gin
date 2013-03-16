@@ -3,6 +3,7 @@
 import distutils.core
 
 if __name__ == "__main__":
+    README = "https://github.com/sbp/gin/blob/master/README.md"
     with open(".git/refs/heads/master", encoding="ascii") as f:
         version = f.read(7)
 
@@ -12,7 +13,7 @@ if __name__ == "__main__":
         author="Sean B. Palmer",
         url="https://github.com/sbp/gin",
         description="Git index file parser",
-        long_description="See `@sbp/gin <https://github.com/sbp/gin>`_ for details",
+        long_description="Documented in `@sbp/gin/README.md <%s>`_" % README,
         scripts=["gin"],
         platforms="Linux and OS X",
         classifiers=[
