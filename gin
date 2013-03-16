@@ -55,7 +55,7 @@ def parse(filename):
             entry["gid"] = read("I")
             entry["size"] = read("I")
 
-            entry["sha1"] = read("20s")
+            entry["sha1"] = f.read(20)
             entry["sha1hex"] = binascii.hexlify(entry["sha1"])
 
             entry["flags"] = read("H")
@@ -115,7 +115,7 @@ def parse(filename):
             yield extension
 
         checksum = {}
-        checksum["sha1"] = read("20s")
+        checksum["sha1"] = f.read(20)
         checksum["sha1hex"] = binascii.hexlify(checksum["sha1"])
         yield checksum
 
