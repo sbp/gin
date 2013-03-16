@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"gin.py - a Git index format parser"
+"gin - a Git index format parser"
 
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
@@ -145,7 +145,7 @@ def main(argv=None):
             sys.exit(1)
 
     if not arg:
-        print("Usage: gin.py [ <index> ]")
+        print("Usage: gin [ <index> ]")
         sys.exit(2)
 
     import pprint
