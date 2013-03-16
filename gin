@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"gin.py - a Git index format parser"
+
+# https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
+
+import binascii
+import struct
+import sys
+
+def parse(filename):
+    with open(filename, "rb") as f:
+        def read(format):
+            # "All binary numbers are in network byte order."
+            # Hence "!" = network order, big endian
+            format = "! " + format
+            bytes = f.read(struct.calcsize(format))
+            return struct.unpack(format, bytes)[0]
+
+        index = {}
+
+        # 4-byte signature, b"DIRC"
+        index["signature"] = read("4s")
+        assert index["signature"] == b"DIRC", "Not a Git index file"
+
+        # 4-byte version number
+        index["version"] = read("I")
+        assert index["version"] in {2, 3}, "Unsupported version: %s" % version
+
+        # 32-bit number of index entries, i.e. 4-byte
+        index["entries"] = read("I")
+
+        yield index
+
+        for n in range(index["entries"]):
+            entry = {}
+
+            entry["number"] = n + 1
+
+            entry["ctime_seconds"] = read("I")
+            entry["ctime_nanoseconds"] = read("I")
+
+            entry["mtime_seconds"] = read("I")
+            entry["mtime_nanoseconds"] = read("I")
+
+            entry["dev"] = read("I")
+            entry["ino"] = read("I")
+
+            # 4-bit object type, 3-bit unused, 9-bit unix permission
+            entry["mode"] = read("I")
+
+            entry["uid"] = read("I")
+            entry["gid"] = read("I")
+            entry["size"] = read("I")
+
+            entry["sha1"] = read("20s")
+            entry["sha1hex"] = binascii.hexlify(entry["sha1"])
+
+            entry["flags"] = read("H")
+
+            # 1-bit assume-valid
+            # 1-bit extended, must be 0 in version 2
+            entry["extended"] = bool(entry["flags"] & (1 << 14))
+            # 2-bit stage (?)
+            # 12-bit name length, if the length is less than 0xFFF (else, 0xFFF)
+
+            if entry["extended"] and (index["version"] == 3):
+                entry["extra_flags"] = read("H")
+
+            path = b""
+            while True:
+                eight = f.read(8)
+                path += eight
+                if eight.endswith(b"\x00"):
+                    break
+            entry["path"] = path.rstrip(b"\x00")
+
+            # This isn't documented, oddly
+            if not entry["extended"]:
+                nul = read("H")
+                assert nul == 0, "No NUL separator found"
+
+            yield entry
+
+
+        checksum = {}
+        checksum["sha1"] = read("20s")
+        checksum["sha1hex"] = binascii.hexlify(checksum["sha1"])
+        yield checksum
+        return
+
+        while True:
+            extension = {}
+            extension["signature"] = f.read(4)
+            if not extension["signature"]:
+                break
+
+            yield extension
+            # signature = read("4s")
+
+def main(argv=None):
+    argv = sys.argv if (argv is None) else argv
+    arglen = len(argv)
+
+    if arglen == 2:
+        import pprint
+        for item in parse(argv[1]):
+            pprint.pprint(item)
+    elif arglen == 1:
+        print(__doc__)
+    else:
+        print("Usage: gin.py [ <index> ]")
+        sys.exit(2)
+
+if __name__ == "__main__":
+    main()
