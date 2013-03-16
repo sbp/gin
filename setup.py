@@ -11,8 +11,8 @@ if __name__ == "__main__":
         version=version,
         author="Sean B. Palmer",
         url="https://github.com/sbp/gin",
-        description="Parse Git index files",
-        long_description="Parse Git index files",
+        description="Git index file parser",
+        long_description="See `@sbp/gin <https://github.com/sbp/gin>`_ for details",
         scripts=["gin"],
         platforms="Linux and OS X",
         classifiers=[
