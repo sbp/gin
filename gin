@@ -4,11 +4,13 @@
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
 import binascii
+import mmap
 import struct
-import sys
 
 def parse(filename):
-    with open(filename, "rb") as f:
+    with open(filename, "rb") as o:
+        f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
+
         def read(format):
             # "All binary numbers are in network byte order."
             # Hence "!" = network order, big endian
@@ -34,7 +36,7 @@ def parse(filename):
         for n in range(index["entries"]):
             entry = {}
 
-            entry["number"] = n + 1
+            entry["entry"] = n + 1
 
             entry["ctime_seconds"] = read("I")
             entry["ctime_nanoseconds"] = read("I")
@@ -47,6 +49,7 @@ def parse(filename):
 
             # 4-bit object type, 3-bit unused, 9-bit unix permission
             entry["mode"] = read("I")
+            entry["octal_mode"] = "%06o" % entry["mode"]
 
             entry["uid"] = read("I")
             entry["gid"] = read("I")
@@ -58,58 +61,96 @@ def parse(filename):
             entry["flags"] = read("H")
 
             # 1-bit assume-valid
+            entry["assume-valid"] = bool(entry["flags"] & (1 << 15))
             # 1-bit extended, must be 0 in version 2
             entry["extended"] = bool(entry["flags"] & (1 << 14))
             # 2-bit stage (?)
+            entry["stage"] = bool(entry["flags"] & (1 << 13)), bool(entry["flags"] & (1 << 12))
             # 12-bit name length, if the length is less than 0xFFF (else, 0xFFF)
+            namelen = entry["flags"] & 0xFFF
+
+            # 62 bytes so far
+            entrylen = 62
 
             if entry["extended"] and (index["version"] == 3):
                 entry["extra_flags"] = read("H")
+                # 1-bit reserved
+                entry["reserved"] = bool(entry["extra_flags"] & (1 << 15))
+                # 1-bit skip-worktree
+                entry["skip-worktree"] = bool(entry["extra_flags"] & (1 << 14))
+                # 1-bit intent-to-add
+                entry["intent-to-add"] = bool(entry["extra_flags"] & (1 << 13))
+                # 13-bits unused
+                entrylen += 2
 
-            path = b""
-            while True:
-                eight = f.read(8)
-                path += eight
-                if eight.endswith(b"\x00"):
-                    break
-            entry["path"] = path.rstrip(b"\x00")
+            if namelen < 0xFFF:
+                entry["name"] = f.read(namelen)
+                entrylen += namelen
+            else:
+                name = []
+                while True:
+                    byte = f.read(1)
+                    if byte == "\x00":
+                        break
+                    name.append(byte)
+                entry["name"] = b"".join(name)
+                entrylen += 1
 
-            # This isn't documented, oddly
-            if not entry["extended"]:
-                nul = read("H")
-                assert nul == 0, "No NUL separator found"
+            padlen = (8 - (entrylen % 8)) or 8
+            nuls = f.read(padlen)
+            assert set(nuls) == {0}, "NULs contained non-NUL"
 
             yield entry
 
+        indexlen = len(f)
+        while f.tell() < (indexlen - 20):
+            extension = {}
+            extension["signature"] = f.read(4)
+            extension["size"] = read("I")
+
+            # Seems to exclude the above:
+            # "src_offset += 8; src_offset += extsize;"
+            extension["data"] = f.read(extension["size"])
+
+            yield extension
 
         checksum = {}
         checksum["sha1"] = read("20s")
         checksum["sha1hex"] = binascii.hexlify(checksum["sha1"])
         yield checksum
-        return
 
-        while True:
-            extension = {}
-            extension["signature"] = f.read(4)
-            if not extension["signature"]:
-                break
-
-            yield extension
-            # signature = read("4s")
+        f.close()
 
 def main(argv=None):
+    import os.path
+    import sys
+
     argv = sys.argv if (argv is None) else argv
     arglen = len(argv)
-
-    if arglen == 2:
-        import pprint
-        for item in parse(argv[1]):
-            pprint.pprint(item)
-    elif arglen == 1:
-        print(__doc__)
-    else:
+    if arglen not in {1, 2}:
         print("Usage: gin.py [ <index> ]")
         sys.exit(2)
+
+    arg = argv[1] if (arglen == 2) else None
+    if not arg:
+        if os.path.isfile(".git/index"):
+            arg = ".git/index"
+
+    if os.path.isdir(arg):
+        path = os.path.join(arg, ".git", "index")
+        if os.path.isfile(path):
+            arg = path
+        else:
+            print("Error: Couldn't find a .git/index file to use")
+            sys.exit(1)
+
+    if not arg:
+        print("Usage: gin.py [ <index> ]")
+        sys.exit(2)
+
+    import pprint
+    for item in parse(arg):
+        pprint.pprint(item)
 
 if __name__ == "__main__":
     main()
