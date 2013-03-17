@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version = "0.1363554331"
+version = "0.1.000"
 
 import distutils.core
 import os.path
@@ -7,15 +7,18 @@ import os.path
 if __name__ == "__main__":
     README = "https://github.com/sbp/gin/blob/master/README.md"
 
-    if os.path.isdir(".git"):
-        import subprocess
-        date = subprocess.check_output(["git", "log", "-1", "--format='%ct'"])
-        date = date[1:11]
+    if os.path.isdir(".git") and os.path.isfile("setup.py"):
+        with open("setup.py", "r+", encoding="ascii") as f:
+            f.seek(34)
+            version = f.read(7)
 
-        if os.path.isfile("setup.py"):
-            with open("setup.py", "r+b") as f:
-                f.seek(36)
-                f.write(date)
+            patch = int(version[-3:]) + 1
+            if patch > 999:
+               raise ValueError("Update major/minor version")
+            version = version[:-3] + "%03i" % patch
+
+            f.seek(34)
+            f.write(version)
 
     distutils.core.setup(
         name="gin",
