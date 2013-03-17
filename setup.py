@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-version = "0.1.003"
 
 import distutils.core
 import os.path
@@ -7,9 +6,9 @@ import os.path
 if __name__ == "__main__":
     README = "https://github.com/sbp/gin/blob/master/README.md"
 
-    if os.path.isdir(".git") and os.path.isfile("setup.py"):
-        with open("setup.py", "r+", encoding="ascii") as f:
-            f.seek(34)
+    if os.path.isdir(".git") and os.path.isfile("gin"):
+        with open("gin", "r+", encoding="ascii") as f:
+            f.seek(66)
             version = f.read(7)
 
             patch = int(version[-3:]) + 1
@@ -17,7 +16,7 @@ if __name__ == "__main__":
                raise ValueError("Update major/minor version")
             version = version[:-3] + "%03i" % patch
 
-            f.seek(34)
+            f.seek(66)
             f.write(version)
 
     distutils.core.setup(

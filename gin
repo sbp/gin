@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"gin - a Git index format parser"
+"gin - a Git index file parser"
+version = "0.1.003"
 
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
@@ -195,9 +196,15 @@ def main():
     parser = argparse.ArgumentParser(description="parse a Git index file")
     parser.add_argument("-j", "--json", action="store_true",
         help="output JSON")
+    parser.add_argument("-v", "--version", action="store_true",
+        help="show script version number")
     parser.add_argument("path", nargs="?", default=".",
         help="path to a Git repository or index file")
     args = parser.parse_args()
+
+    if args.version:
+        print("gin " + version)
+        sys.exit()
 
     if os.path.isdir(args.path):
         path = os.path.join(args.path, ".git", "index")
