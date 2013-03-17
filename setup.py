@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version = "0.1.001"
+version = "0.1.002"
 
 import distutils.core
 import os.path

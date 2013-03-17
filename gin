@@ -211,7 +211,7 @@ def main():
         parser.print_usage()
         sys.exit(2)
 
-    parse_file(args.path)
+    parse_file(args.path, pretty=not args.json)
 
 if __name__ == "__main__":
     main()

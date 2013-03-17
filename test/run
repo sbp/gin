@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd $(dirname $0)
+cd ..
+
+./gin test/01.index > test/01.test.txt
+./gin -j test/01.index > test/01.test.json
+
+diff -u test/01.txt test/01.test.txt
+diff -u test/01.json test/01.test.json
+
+rm test/01.test.*
