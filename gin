@@ -4,10 +4,11 @@
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
 import binascii
+import collections
 import mmap
 import struct
 
-def parse(filename):
+def parse(filename, pretty=True):
     with open(filename, "rb") as o:
         f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
 
@@ -18,7 +19,7 @@ def parse(filename):
             bytes = f.read(struct.calcsize(format))
             return struct.unpack(format, bytes)[0]
 
-        index = {}
+        index = collections.OrderedDict()
 
         # 4-byte signature, b"DIRC"
         index["signature"] = read("4s")
@@ -34,38 +35,52 @@ def parse(filename):
         yield index
 
         for n in range(index["entries"]):
-            entry = {}
+            entry = collections.OrderedDict()
 
             entry["entry"] = n + 1
 
             entry["ctime_seconds"] = read("I")
             entry["ctime_nanoseconds"] = read("I")
+            if pretty:
+                entry["ctime"] = entry["ctime_seconds"]
+                entry["ctime"] += entry["ctime_nanoseconds"] / 1000000000
+                del entry["ctime_seconds"]
+                del entry["ctime_nanoseconds"]
 
             entry["mtime_seconds"] = read("I")
             entry["mtime_nanoseconds"] = read("I")
+            if pretty:
+                entry["mtime"] = entry["mtime_seconds"]
+                entry["mtime"] += entry["mtime_nanoseconds"] / 1000000000
+                del entry["mtime_seconds"]
+                del entry["mtime_nanoseconds"]
 
             entry["dev"] = read("I")
             entry["ino"] = read("I")
 
             # 4-bit object type, 3-bit unused, 9-bit unix permission
             entry["mode"] = read("I")
-            entry["octal_mode"] = "%06o" % entry["mode"]
+            if pretty:
+                entry["mode"] = "%06o" % entry["mode"]
 
             entry["uid"] = read("I")
             entry["gid"] = read("I")
             entry["size"] = read("I")
 
             entry["sha1"] = f.read(20)
-            entry["sha1hex"] = binascii.hexlify(entry["sha1"])
+            if pretty:
+                entry["sha1"] = binascii.hexlify(entry["sha1"])
 
             entry["flags"] = read("H")
 
             # 1-bit assume-valid
-            entry["assume-valid"] = bool(entry["flags"] & (1 << 15))
+            entry["assume-valid"] = bool(entry["flags"] & (0b10000000 << 8))
             # 1-bit extended, must be 0 in version 2
-            entry["extended"] = bool(entry["flags"] & (1 << 14))
+            entry["extended"] = bool(entry["flags"] & (0b01000000 << 8))
             # 2-bit stage (?)
-            entry["stage"] = bool(entry["flags"] & (1 << 13)), bool(entry["flags"] & (1 << 12))
+            stage_one = bool(entry["flags"] & (0b00100000 << 8))
+            stage_two = bool(entry["flags"] & (0b00010000 << 8))
+            entry["stage"] = stage_one, stage_two
             # 12-bit name length, if the length is less than 0xFFF (else, 0xFFF)
             namelen = entry["flags"] & 0xFFF
 
@@ -73,20 +88,23 @@ def parse(filename):
             entrylen = 62
 
             if entry["extended"] and (index["version"] == 3):
-                entry["extra_flags"] = read("H")
+                entry["extra-flags"] = read("H")
                 # 1-bit reserved
-                entry["reserved"] = bool(entry["extra_flags"] & (1 << 15))
+                entry["reserved"] = bool(entry["extra-flags"] & (0b10000000 << 8))
                 # 1-bit skip-worktree
-                entry["skip-worktree"] = bool(entry["extra_flags"] & (1 << 14))
+                entry["skip-worktree"] = bool(entry["extra-flags"] & (0b01000000 << 8))
                 # 1-bit intent-to-add
-                entry["intent-to-add"] = bool(entry["extra_flags"] & (1 << 13))
+                entry["intent-to-add"] = bool(entry["extra-flags"] & (0b00100000 << 8))
                 # 13-bits unused
+                used = entry["extra-flags"] & (0b11100000 << 8)
+                assert not used, "Expected unused bits in extra-flags"
                 entrylen += 2
 
             if namelen < 0xFFF:
                 entry["name"] = f.read(namelen)
                 entrylen += namelen
             else:
+                # Do it the hard way
                 name = []
                 while True:
                     byte = f.read(1)
@@ -106,7 +124,7 @@ def parse(filename):
         extnumber = 1
 
         while f.tell() < (indexlen - 20):
-            extension = {}
+            extension = collections.OrderedDict()
             extension["extension"] = extnumber
             extension["signature"] = f.read(4)
             extension["size"] = read("I")
@@ -118,9 +136,11 @@ def parse(filename):
             yield extension
             extnumber += 1
 
-        checksum = {}
+        checksum = collections.OrderedDict()
+        checksum["checksum"] = True
         checksum["sha1"] = f.read(20)
-        checksum["sha1hex"] = binascii.hexlify(checksum["sha1"])
+        if pretty:
+            checksum["sha1"] = binascii.hexlify(checksum["sha1"])
         yield checksum
 
         f.close()
@@ -152,9 +172,31 @@ def main(argv=None):
         print("Usage: gin [ <index> ]")
         sys.exit(2)
 
+    json = False
+
     import pprint
-    for item in parse(arg):
-        pprint.pprint(item)
+    if json:
+        print("[")
+    for item in parse(arg, pretty=not json):
+        if "version" in item:
+            print("[header]")
+        elif "entry" in item:
+            print("[entry]")
+        elif "extension" in item:
+            print("[extension]")
+        elif "checksum" in item:
+            print("[checksum]")
+        else:
+            print("[?]")
+
+        for key, value in item.items():
+            print(" ", key, "=", value)
+        if json and not ("checksum" in item):
+            print(",")
+        else:
+            print()
+    if json:
+        print("]")
 
 if __name__ == "__main__":
     main()
