@@ -4,9 +4,7 @@ The `gin` script parses the databases that live at `.git/index` in any Git repos
 
 ## Install
 
-```bash
-pip3 install gin
-```
+    pip3 install gin
 
 Or clone this repo and use the `gin` script.
 
@@ -31,23 +29,17 @@ optional arguments:
 
 ### Examples
 
-```bash
-gin
-```
+*     gin
 
-Show the Git index file in the current repository, if in the repository root.
+  Show the Git index file in the current repository, if in the repository root.
 
-```bash
-gin ~/git-repo
-```
+*     gin ~/git-repo
 
-Show the Git index file in the `~/git-repo` repository.
+  Show the Git index file in the `~/git-repo` repository.
 
-```bash
-gin ~/git-repo/.git/index
-```
+*     gin ~/git-repo/.git/index
 
-Show the Git index file `~/git-repo/.git/index`.
+  Show the Git index file `~/git-repo/.git/index`.
 
 The script supports index file versions 2 and 3, and will skip over extensions.
 
@@ -65,8 +57,11 @@ Tweet [@sbp](https://twitter.com/sbp) with short comments or enquiries.
 
 ## Example
 
+    $ gin test/01.index
+
+Output:
+
 ```ini
-$ ./gin test/01.index
 [header]
   signature = DIRC
   version = 3
