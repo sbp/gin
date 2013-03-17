@@ -22,8 +22,8 @@ def parse(filename, pretty=True):
         index = collections.OrderedDict()
 
         # 4-byte signature, b"DIRC"
-        index["signature"] = read("4s")
-        assert index["signature"] == b"DIRC", "Not a Git index file"
+        index["signature"] = f.read(4).decode("ascii")
+        assert index["signature"] == "DIRC", "Not a Git index file"
 
         # 4-byte version number
         index["version"] = read("I")
@@ -67,10 +67,7 @@ def parse(filename, pretty=True):
             entry["gid"] = read("I")
             entry["size"] = read("I")
 
-            entry["sha1"] = f.read(20)
-            if pretty:
-                entry["sha1"] = binascii.hexlify(entry["sha1"])
-
+            entry["sha1"] = binascii.hexlify(f.read(20)).decode("ascii")
             entry["flags"] = read("H")
 
             # 1-bit assume-valid
@@ -101,7 +98,7 @@ def parse(filename, pretty=True):
                 entrylen += 2
 
             if namelen < 0xFFF:
-                entry["name"] = f.read(namelen)
+                entry["name"] = f.read(namelen).decode("utf-8", "replace")
                 entrylen += namelen
             else:
                 # Do it the hard way
@@ -111,7 +108,7 @@ def parse(filename, pretty=True):
                     if byte == "\x00":
                         break
                     name.append(byte)
-                entry["name"] = b"".join(name)
+                entry["name"] = b"".join(name).decode("utf-8", "replace")
                 entrylen += 1
 
             padlen = (8 - (entrylen % 8)) or 8
@@ -126,21 +123,19 @@ def parse(filename, pretty=True):
         while f.tell() < (indexlen - 20):
             extension = collections.OrderedDict()
             extension["extension"] = extnumber
-            extension["signature"] = f.read(4)
+            extension["signature"] = f.read(4).decode("ascii")
             extension["size"] = read("I")
 
             # Seems to exclude the above:
             # "src_offset += 8; src_offset += extsize;"
-            extension["data"] = f.read(extension["size"])
+            extension["data"] = repr(f.read(extension["size"]))
 
             yield extension
             extnumber += 1
 
         checksum = collections.OrderedDict()
         checksum["checksum"] = True
-        checksum["sha1"] = f.read(20)
-        if pretty:
-            checksum["sha1"] = binascii.hexlify(checksum["sha1"])
+        checksum["sha1"] = binascii.hexlify(f.read(20)).decode("ascii")
         yield checksum
 
         f.close()
@@ -172,30 +167,37 @@ def main(argv=None):
         print("Usage: gin [ <index> ]")
         sys.exit(2)
 
-    json = False
+    json_mode = False
 
+    import json
     import pprint
-    if json:
-        print("[")
-    for item in parse(arg, pretty=not json):
-        if "version" in item:
-            print("[header]")
-        elif "entry" in item:
-            print("[entry]")
-        elif "extension" in item:
-            print("[extension]")
-        elif "checksum" in item:
-            print("[checksum]")
-        else:
-            print("[?]")
 
-        for key, value in item.items():
-            print(" ", key, "=", value)
-        if json and not ("checksum" in item):
-            print(",")
+    if json_mode:
+        print("[")
+    for item in parse(arg, pretty=not json_mode):
+        if not json_mode:
+            if "version" in item:
+               print("[header]")
+            elif "entry" in item:
+                print("[entry]")
+            elif "extension" in item:
+                print("[extension]")
+            elif "checksum" in item:
+                print("[checksum]")
+            else:
+                print("[?]")
+
+        if json_mode:
+            print(json.dumps(item))
         else:
+            for key, value in item.items():
+                print(" ", key, "=", value)
+
+        if json_mode and not ("checksum" in item):
+            print(",")
+        elif not ("checksum" in item):
             print()
-    if json:
+    if json_mode:
         print("]")
 
 if __name__ == "__main__":
