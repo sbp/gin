@@ -1,0 +1,103 @@
+[header]
+  signature = DIRC
+  version = 3
+  entries = 5
+
+[entry]
+  entry = 1
+  ctime = 1363549359.0
+  mtime = 1363549359.0
+  dev = 16777217
+  ino = 1154043
+  mode = 100644
+  uid = 501
+  gid = 20
+  size = 6
+  sha1 = d5f7fc3f74f7dec08280f370a975b112e8f60818
+  flags = 9
+  assume-valid = False
+  extended = False
+  stage = (False, False)
+  name = added.txt
+
+[entry]
+  entry = 2
+  ctime = 0.0
+  mtime = 0.0
+  dev = 0
+  ino = 0
+  mode = 100644
+  uid = 0
+  gid = 0
+  size = 0
+  sha1 = 71779d2cab258b810b2f567c9a619f6e0105f44e
+  flags = 11
+  assume-valid = False
+  extended = False
+  stage = (False, False)
+  name = deleted.txt
+
+[entry]
+  entry = 3
+  ctime = 1363549318.0
+  mtime = 1363549318.0
+  dev = 16777217
+  ino = 1154007
+  mode = 100644
+  uid = 501
+  gid = 20
+  size = 7
+  sha1 = 79c53955ef856f16f2107446bc721c8879a1bd2e
+  flags = 20
+  assume-valid = False
+  extended = False
+  stage = (False, False)
+  name = directory/nested.txt
+
+[entry]
+  entry = 4
+  ctime = 0.0
+  mtime = 0.0
+  dev = 0
+  ino = 0
+  mode = 100644
+  uid = 0
+  gid = 0
+  size = 0
+  sha1 = e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+  flags = 16394
+  assume-valid = False
+  extended = True
+  stage = (False, False)
+  extra-flags = 8192
+  reserved = False
+  skip-worktree = False
+  intent-to-add = True
+  name = intent.txt
+
+[entry]
+  entry = 5
+  ctime = 1363549294.0
+  mtime = 1363549294.0
+  dev = 16777217
+  ino = 1154004
+  mode = 100644
+  uid = 501
+  gid = 20
+  size = 8
+  sha1 = e79c5e8f964493290a409888d5413a737e8e5dd5
+  flags = 12
+  assume-valid = False
+  extended = False
+  stage = (False, False)
+  name = modified.txt
+
+[extension]
+  extension = 1
+  signature = TREE
+  size = 40
+  data = "\u0000-1 1\ndirectory\u00001 0\n\u009d\u00fd}\b\u00ce\u00f45\u00bc\u00cf\u00c5p\u001b[T|7@\u00a6t\u0004"
+
+[checksum]
+  checksum = True
+  sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d

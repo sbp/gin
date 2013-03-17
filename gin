@@ -34,7 +34,8 @@ def parse(filename, pretty=True):
 
         # 4-byte version number
         index["version"] = read("I")
-        check(index["version"] in {2, 3}, "Unsupported version: %s" % version)
+        check(index["version"] in {2, 3},
+            "Unsupported version: %s" % index["version"])
 
         # 32-bit number of index entries, i.e. 4-byte
         index["entries"] = read("I")

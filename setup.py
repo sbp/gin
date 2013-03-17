@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version = "60dda6c"
+version = "7888158"
 
 import distutils.core
 import os.path
