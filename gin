@@ -204,7 +204,8 @@ def main():
         if os.path.isfile(path):
             args.path = path
         else:
-            print("Error: Couldn't find a .git/index file to use")
+            print("error: couldn't find a .git/index file to use", file=sys.stderr)
+            print("use -h or --help for some documentation", file=sys.stderr)
             sys.exit(1)
 
     if not args.path:

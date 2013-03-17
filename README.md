@@ -90,3 +90,22 @@ Output:
   checksum = True
   sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d
 ```
+
+    $ gin | egrep '^  name ='
+
+Output:
+
+```
+  name = .gitignore
+  name = MANIFEST
+  name = Makefile
+  name = README.md
+  name = gin
+  name = setup.py
+  name = test/01.index
+  name = test/01.json
+  name = test/01.txt
+  name = test/run
+```
+
+Which should be equivalent to `git ls-files`.
