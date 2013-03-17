@@ -1,10 +1,12 @@
-# gin, a Git index file parser
+# gin - a Git index file parser
 
 The `gin` script parses the databases that live at `.git/index` in any Git repository, and shows the contents in a readable form, or as a JSON dump. These databases store the current state of the stage area, sometimes called the index or cache.
 
 ## Install
 
-    pip3 install gin
+```bash
+pip3 install gin
+```
 
 Or clone this repo and use the `gin` script.
 
@@ -14,19 +16,46 @@ The script requires Python 3.
 
 ## Use
 
-    gin
+```
+usage: gin [-h] [-j] [path]
+
+parse a Git index file
+
+positional arguments:
+  path        path to a Git repository or index file
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -j, --json  output JSON
+```
+
+### Examples
+
+```bash
+gin
+```
 
 Show the Git index file in the current repository, if in the repository root.
 
-    gin ~/git-repo
+```bash
+gin ~/git-repo
+```
 
 Show the Git index file in the `~/git-repo` repository.
 
-    gin ~/git-repo/.git/index
+```bash
+gin ~/git-repo/.git/index
+```
 
 Show the Git index file `~/git-repo/.git/index`.
 
 The script supports index file versions 2 and 3, and will skip over extensions.
+
+Use the `-j` or `--json` flags to dump JSON.
+
+### Advanced
+
+To use the script as a module, rename it to `gin.py`.
 
 ## Report issues
 
@@ -36,44 +65,33 @@ Tweet [@sbp](https://twitter.com/sbp) with short comments or enquiries.
 
 ## Example
 
-    $ gin test/01.index
-    [header]
-      signature = DIRC
-      version = 3
-      entries = 5
-    
-    [entry]
-      entry = 1
-      ctime = 1363549359.0
-      mtime = 1363549359.0
-      dev = 16777217
-      ino = 1154043
-      mode = 100644
-      uid = 501
-      gid = 20
-      size = 6
-      sha1 = d5f7fc3f74f7dec08280f370a975b112e8f60818
-      flags = 9
-      assume-valid = False
-      extended = False
-      stage = (False, False)
-      name = added.txt
-    
-    [entry]
-      entry = 2
-      ctime = 0.0
-      mtime = 0.0
-      dev = 0
-      ino = 0
-      mode = 100644
-      uid = 0
-      gid = 0
-      size = 0
-      sha1 = 71779d2cab258b810b2f567c9a619f6e0105f44e
-      flags = 11
-      assume-valid = False
-      extended = False
-      stage = (False, False)
-      name = deleted.txt
+```ini
+$ ./gin test/01.index
+[header]
+  signature = DIRC
+  version = 3
+  entries = 5
 
-    [...]
+[entry]
+  entry = 1
+  ctime = 1363549359.0
+  mtime = 1363549359.0
+  dev = 16777217
+  ino = 1154043
+  mode = 100644
+  uid = 501
+  gid = 20
+  size = 6
+  sha1 = d5f7fc3f74f7dec08280f370a975b112e8f60818
+  flags = 9
+  assume-valid = False
+  extended = False
+  stage = (False, False)
+  name = added.txt
+
+[...]
+
+[checksum]
+  checksum = True
+  sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d
+```
