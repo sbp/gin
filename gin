@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 "gin - a Git index file parser"
-version = "0.1.004"
+version = "0.1.005"
 
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
