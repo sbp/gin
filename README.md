@@ -57,6 +57,8 @@ Tweet [@sbp](https://twitter.com/sbp) with short comments or enquiries.
 
 ## Example
 
+### Pretty print an index
+
     $ gin test/01.index
 
 Output:
@@ -90,6 +92,8 @@ Output:
   checksum = True
   sha1 = 1ef0972eb948e6229240668effcb9c600fe5888d
 ```
+
+### Get name fields from an index
 
     $ gin | egrep '^  name ='
 
