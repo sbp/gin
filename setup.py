@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+version = "60dda6c"
 
 import distutils.core
 import os.path
@@ -9,11 +10,11 @@ if __name__ == "__main__":
     if os.path.isfile(".git/refs/heads/master"):
         with open(".git/refs/heads/master", encoding="ascii") as f:
             version = f.read(7)
-        with open("VERSION", "w", encoding="ascii") as f:
-            f.write(version)
-    else:
-        with open("VERSION", encoding="ascii") as f:
-            version = f.read(7)
+
+        if os.path.isfile("setup.py"):
+            with open("setup.py", "r+", encoding="ascii") as f:
+                f.seek(34)
+                f.write(version)
 
     distutils.core.setup(
         name="gin",
