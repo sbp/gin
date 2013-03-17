@@ -9,6 +9,12 @@ import json
 import mmap
 import struct
 
+def check(boolean, message):
+    if not boolean:
+        import sys
+        print("error: " + message, file=sys.stderr)
+        sys.exit(1)
+
 def parse(filename, pretty=True):
     with open(filename, "rb") as o:
         f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
@@ -24,11 +30,11 @@ def parse(filename, pretty=True):
 
         # 4-byte signature, b"DIRC"
         index["signature"] = f.read(4).decode("ascii")
-        assert index["signature"] == "DIRC", "Not a Git index file"
+        check(index["signature"] == "DIRC", "Not a Git index file")
 
         # 4-byte version number
         index["version"] = read("I")
-        assert index["version"] in {2, 3}, "Unsupported version: %s" % version
+        check(index["version"] in {2, 3}, "Unsupported version: %s" % version)
 
         # 32-bit number of index entries, i.e. 4-byte
         index["entries"] = read("I")
@@ -95,7 +101,7 @@ def parse(filename, pretty=True):
                 entry["intent-to-add"] = bool(entry["extra-flags"] & (0b00100000 << 8))
                 # 13-bits unused
                 # used = entry["extra-flags"] & (0b11100000 << 8)
-                # assert not used, "Expected unused bits in extra-flags"
+                # check(not used, "Expected unused bits in extra-flags")
                 entrylen += 2
 
             if namelen < 0xFFF:
@@ -114,7 +120,7 @@ def parse(filename, pretty=True):
 
             padlen = (8 - (entrylen % 8)) or 8
             nuls = f.read(padlen)
-            assert set(nuls) == {0}, "NULs contained non-NUL"
+            check(set(nuls) == {0}, "padding contained non-NUL")
 
             yield entry
 
