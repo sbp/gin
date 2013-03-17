@@ -5,6 +5,7 @@
 
 import binascii
 import collections
+import json
 import mmap
 import struct
 
@@ -93,8 +94,8 @@ def parse(filename, pretty=True):
                 # 1-bit intent-to-add
                 entry["intent-to-add"] = bool(entry["extra-flags"] & (0b00100000 << 8))
                 # 13-bits unused
-                used = entry["extra-flags"] & (0b11100000 << 8)
-                assert not used, "Expected unused bits in extra-flags"
+                # used = entry["extra-flags"] & (0b11100000 << 8)
+                # assert not used, "Expected unused bits in extra-flags"
                 entrylen += 2
 
             if namelen < 0xFFF:
@@ -128,7 +129,10 @@ def parse(filename, pretty=True):
 
             # Seems to exclude the above:
             # "src_offset += 8; src_offset += extsize;"
-            extension["data"] = repr(f.read(extension["size"]))
+            extension["data"] = f.read(extension["size"])
+            extension["data"] = extension["data"].decode("iso-8859-1")
+            if pretty:
+                extension["data"] = json.dumps(extension["data"])
 
             yield extension
             extnumber += 1
@@ -140,65 +144,67 @@ def parse(filename, pretty=True):
 
         f.close()
 
-def main(argv=None):
+def parse_file(arg, pretty=True):
+    if pretty:
+       properties = {
+           "version": "[header]",
+           "entry": "[entry]",
+           "extension": "[extension]",
+           "checksum": "[checksum]"
+       }
+    else:
+        print("[")
+
+    for item in parse(arg, pretty=pretty):
+        if pretty:
+            for key, value in properties.items():
+                if key in item:
+                    print(value)
+                    break
+            else:
+                print("[?]")
+
+        if pretty:
+            for key, value in item.items():
+                print(" ", key, "=", value)
+        else:
+            print(json.dumps(item))
+
+        last = "checksum" in item
+        if not last:
+            if pretty:
+                print()
+            else:
+                print(",")
+
+    if not pretty:
+        print("]")
+
+def main():
+    import argparse
     import os.path
     import sys
 
-    argv = sys.argv if (argv is None) else argv
-    arglen = len(argv)
-    if arglen not in {1, 2}:
-        print("Usage: gin.py [ <index> ]")
-        sys.exit(2)
+    parser = argparse.ArgumentParser(description="parse a Git index file")
+    parser.add_argument("-j", "--json", action="store_true",
+        help="output JSON")
+    parser.add_argument("path", nargs="?", default=".",
+        help="path to a Git repository or index file")
+    args = parser.parse_args()
 
-    arg = argv[1] if (arglen == 2) else None
-    if not arg:
-        if os.path.isfile(".git/index"):
-            arg = ".git/index"
-
-    if os.path.isdir(arg):
-        path = os.path.join(arg, ".git", "index")
+    if os.path.isdir(args.path):
+        path = os.path.join(args.path, ".git", "index")
         if os.path.isfile(path):
-            arg = path
+            args.path = path
         else:
             print("Error: Couldn't find a .git/index file to use")
             sys.exit(1)
 
-    if not arg:
-        print("Usage: gin [ <index> ]")
+    if not args.path:
+        parser.print_usage()
         sys.exit(2)
 
-    json_mode = False
-
-    import json
-    import pprint
-
-    if json_mode:
-        print("[")
-    for item in parse(arg, pretty=not json_mode):
-        if not json_mode:
-            if "version" in item:
-               print("[header]")
-            elif "entry" in item:
-                print("[entry]")
-            elif "extension" in item:
-                print("[extension]")
-            elif "checksum" in item:
-                print("[checksum]")
-            else:
-                print("[?]")
-
-        if json_mode:
-            print(json.dumps(item))
-        else:
-            for key, value in item.items():
-                print(" ", key, "=", value)
-
-        if json_mode and not ("checksum" in item):
-            print(",")
-        elif not ("checksum" in item):
-            print()
-    if json_mode:
-        print("]")
+    parse_file(args.path)
 
 if __name__ == "__main__":
     main()
