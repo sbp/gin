@@ -29,17 +29,17 @@ optional arguments:
 
 ### Examples
 
-*       gin
+*   Show the Git index file in the current repository, if in the repository root:
 
-    Show the Git index file in the current repository, if in the repository root.
+        gin
 
-*       gin ~/git-repo
+*   Show the Git index file in the `~/git-repo` repository:
 
-    Show the Git index file in the `~/git-repo` repository.
+        gin ~/git-repo    
 
-*       gin ~/git-repo/.git/index
+*   Show the Git index file `~/git-repo/.git/index`:
 
-    Show the Git index file `~/git-repo/.git/index`.
+        gin ~/git-repo/.git/index
 
 The script supports index file versions 2 and 3, and will skip over extensions.
 
