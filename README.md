@@ -15,16 +15,17 @@ The script requires Python 3.
 ## Use
 
 ```
-usage: gin [-h] [-j] [path]
+usage: gin [-h] [-j] [-v] [path]
 
 parse a Git index file
 
 positional arguments:
-  path        path to a Git repository or index file
+  path           path to a Git repository or index file
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -j, --json  output JSON
+  -h, --help     show this help message and exit
+  -j, --json     output JSON
+  -v, --version  show script version number
 ```
 
 ### Examples
