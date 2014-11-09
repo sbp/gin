@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import distutils.core
 import os.path
@@ -37,5 +37,6 @@ if __name__ == "__main__":
             "Operating System :: MacOS :: MacOS X",
             "Operating System :: POSIX",
             "Programming Language :: Python :: 3"
+            "Programming Language :: Python :: 2"
         ]
     )
