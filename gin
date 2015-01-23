@@ -9,6 +9,7 @@ import collections
 import json
 import mmap
 import struct
+import platform
 
 def check(boolean, message):
     if not boolean:
@@ -18,7 +19,10 @@ def check(boolean, message):
 
 def parse(filename, pretty=True):
     with open(filename, "rb") as o:
-        f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
+        if platform.system() == 'Windows':
+                f = mmap.mmap(o.fileno(), 0, access=mmap.ACCESS_READ)
+        else:
+                f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
 
         def read(format):
             # "All binary numbers are in network byte order."
@@ -26,6 +30,14 @@ def parse(filename, pretty=True):
             format = "! " + format
             bytes = f.read(struct.calcsize(format))
             return struct.unpack(format, bytes)[0]
+
+        def readStrUntil(delim):
+            ret = []
+            while True:
+                    b = f.read(1)
+                    if b == '' or b == delim:
+                            return b"".join(ret).decode("utf-8", "replace")
+                    ret.append(b)
 
         index = collections.OrderedDict()
 
@@ -110,14 +122,7 @@ def parse(filename, pretty=True):
                 entry["name"] = f.read(namelen).decode("utf-8", "replace")
                 entrylen += namelen
             else:
-                # Do it the hard way
-                name = []
-                while True:
-                    byte = f.read(1)
-                    if byte == "\x00":
-                        break
-                    name.append(byte)
-                entry["name"] = b"".join(name).decode("utf-8", "replace")
+                entry["name"] = readStrUntil("\x00")
                 entrylen += 1
 
             padlen = (8 - (entrylen % 8)) or 8
@@ -129,20 +134,37 @@ def parse(filename, pretty=True):
         indexlen = len(f)
         extnumber = 1
 
+        def readCachedTrees(list):
+                cachedTree = collections.OrderedDict()
+                cachedTree["name"] = readStrUntil(b"\x00")
+                cachedTree["entryCnt"] = int(readStrUntil(b" "))
+                cachedTree["subtreeCnt"] = int(readStrUntil(b"\x0a"))
+                if cachedTree["entryCnt"] != -1:
+                        cachedTree["id"] = binascii.hexlify(f.read(20)).decode("ascii")
+                list.append(cachedTree)
+                for i in range(cachedTree["subtreeCnt"]):
+                       readCachedTrees(list)
+
         while f.tell() < (indexlen - 20):
             extension = collections.OrderedDict()
             extension["extension"] = extnumber
             extension["signature"] = f.read(4).decode("ascii")
             extension["size"] = read("I")
 
-            # Seems to exclude the above:
-            # "src_offset += 8; src_offset += extsize;"
-            extension["data"] = f.read(extension["size"])
-            extension["data"] = extension["data"].decode("iso-8859-1")
-            if pretty:
-                extension["data"] = json.dumps(extension["data"])
-
-            yield extension
+            if extension["signature"] == "TREE":
+                    yield extension
+                    cachedTrees = []
+                    readCachedTrees(cachedTrees)
+                    for t in cachedTrees:
+                            yield t
+            else:
+                    # Seems to exclude the above:
+                    # "src_offset += 8; src_offset += extsize;"
+                    extension["data"] = f.read(extension["size"])
+                    extension["data"] = extension["data"].decode("iso-8859-1")
+                    if pretty:
+                            extension["data"] = json.dumps(extension["data"])
+                    yield extension
             extnumber += 1
 
         checksum = collections.OrderedDict()
@@ -158,6 +180,7 @@ def parse_file(arg, pretty=True):
            "version": "[header]",
            "entry": "[entry]",
            "extension": "[extension]",
+           "entryCnt": "[cachedTree]",
            "checksum": "[checksum]"
        }
     else:
