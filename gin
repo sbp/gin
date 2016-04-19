@@ -10,7 +10,7 @@ import json
 import mmap
 import struct
 
-version = "0.1.006"
+version = "0.1.007"
 
 def check(boolean, message):
     if not boolean:
