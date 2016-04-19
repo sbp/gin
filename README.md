@@ -4,13 +4,11 @@ The `gin` script parses the databases that live at `.git/index` in any Git repos
 
 ## Install
 
-    pip3 install gin
+    pip install gin
 
 Or clone this repo and use the `gin` script.
 
 Or download the script directly.
-
-The script requires Python 3.
 
 ## Use
 

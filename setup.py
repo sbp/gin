@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import distutils.core
 import os.path
@@ -8,8 +8,8 @@ if __name__ == "__main__":
     README = "https://github.com/sbp/gin/blob/master/README.md"
 
     if os.path.isfile("gin"):
-        with open("gin", "r+", encoding="ascii") as f:
-            f.seek(66)
+        with open("gin", "r+b") as f:
+            f.seek(261)
             version = f.read(7)
 
             if os.path.isdir(".git") and ("sdist" in sys.argv):
@@ -18,7 +18,7 @@ if __name__ == "__main__":
                    raise ValueError("Update major/minor version")
                 version = version[:-3] + "%03i" % patch
 
-                f.seek(66)
+                f.seek(261)
                 f.write(version)
     else:
         print("Unable to find gin script: refusing to install")
@@ -37,5 +37,6 @@ if __name__ == "__main__":
             "Operating System :: MacOS :: MacOS X",
             "Operating System :: POSIX",
             "Programming Language :: Python :: 3"
+            "Programming Language :: Python :: 2"
         ]
     )

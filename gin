@@ -1,14 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 "gin - a Git index file parser"
-version = "0.1.006"
 
 # https://github.com/git/git/blob/master/Documentation/technical/index-format.txt
 
+from __future__ import print_function
 import binascii
 import collections
 import json
 import mmap
 import struct
+
+version = "0.1.007"
 
 def check(boolean, message):
     if not boolean:
@@ -122,7 +124,7 @@ def parse(filename, pretty=True):
 
             padlen = (8 - (entrylen % 8)) or 8
             nuls = f.read(padlen)
-            check(set(nuls) == {0}, "padding contained non-NUL")
+            check(nuls == b'\x00' * padlen, "padding contained non-NUL")
 
             yield entry
 
