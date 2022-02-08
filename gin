@@ -9,6 +9,7 @@ import collections
 import json
 import mmap
 import struct
+import sys
 
 def check(boolean, message):
     if not boolean:
@@ -18,7 +19,7 @@ def check(boolean, message):
 
 def parse(filename, pretty=True):
     with open(filename, "rb") as o:
-        f = mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
+        f = mmap.mmap(o.fileno(), 0, access=mmap.ACCESS_READ) if sys.platform == 'win32' else mmap.mmap(o.fileno(), 0, prot=mmap.PROT_READ)
 
         def read(format):
             # "All binary numbers are in network byte order."
